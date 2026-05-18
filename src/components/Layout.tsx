@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useStore } from '../store';
+import { useAuth } from '../authStore';
 import { Toast } from './Toast';
 
 interface LayoutProps {
@@ -8,7 +9,8 @@ interface LayoutProps {
 }
 
 export function Layout({ children }: LayoutProps) {
-  const { users, currentUser, setCurrentUser, projects, logout } = useStore();
+  const { users, currentUser, setCurrentUser, projects } = useStore();
+  const { logout } = useAuth();
   const navigate = useNavigate();
   const { id } = useParams();
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -69,32 +71,9 @@ export function Layout({ children }: LayoutProps) {
           )}
         </div>
 
-        {/* User selector */}
         <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', whiteSpace: 'nowrap' }}>Logar como:</span>
-          <select
-            value={currentUser.id}
-            onChange={e => setCurrentUser(e.target.value)}
-            style={{
-              fontSize: 13,
-              border: '1px solid rgba(255,255,255,0.15)',
-              borderRadius: 'var(--r-sm)',
-              padding: '5px 8px',
-              background: 'rgba(255,255,255,0.07)',
-              color: 'rgba(255,255,255,0.85)',
-              outline: 'none',
-              cursor: 'pointer',
-            }}
-          >
-            {users.map(u => (
-              <option key={u.id} value={u.id} style={{ background: '#1d242a', color: '#fff' }}>
-                {u.name} ({u.role})
-              </option>
-            ))}
-          </select>
-
           <button
-            onClick={() => { logout(); navigate('/login', { replace: true }); }}
+            onClick={async () => { await logout(); navigate('/login', { replace: true }); }}
             style={{
               fontSize: 12,
               color: 'rgba(255,255,255,0.5)',
