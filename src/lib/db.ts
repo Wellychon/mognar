@@ -8,7 +8,7 @@
 
 import { supabase } from './supabase';
 import type {
-  User, Project, EtapaInfo, EtapaData, Feedback, Pendencia,
+  User, Project, Etapa as EtapaInfo, EtapaData, Feedback, Pendencia,
   TarefaGantt, Compra, ChecklistDiario, RelatorioSemanal, FotoObra,
 } from '../types';
 
@@ -112,7 +112,6 @@ export async function loadAll(): Promise<LoadedState | null> {
           dataLiberacao: e.data_liberacao ?? undefined,
           liberadaPor: e.liberada_por ?? undefined,
           observacaoLiberacao: e.observacao_liberacao ?? undefined,
-          dataAceiteCliente: e.data_aceite_cliente ?? undefined,
         }));
 
       const etapasData: Record<number, EtapaData> = {};
@@ -123,37 +122,44 @@ export async function loadAll(): Promise<LoadedState | null> {
       // Etapa 3: pendências
       const pends: Pendencia[] = (peByProj[pr.id] ?? []).map(r => ({
         id: r.id, descricao: r.descricao, responsavel: r.responsavel,
-        status: r.status, dataCriacao: r.data_criacao, dataResolucao: r.data_resolucao,
-      } as Pendencia));
+        status: r.status, data: r.data_criacao,
+        dataCriacao: r.data_criacao, dataResolucao: r.data_resolucao,
+      } as unknown as Pendencia));
       if (pends.length) {
         etapasData[3] = { ...(etapasData[3] ?? {}), pendencias: pends } as EtapaData;
       }
 
       // Feedbacks vão em etapasData[etapa].feedbacks? Aqui mantemos uma cópia no projeto.
       const feedbacks: Feedback[] = (fbByProj[pr.id] ?? []).map(r => ({
-        autor: r.autor, texto: r.texto, data: r.data,
-      } as Feedback));
+        id: r.id, autor: r.autor, texto: r.texto, data: r.data, dataHora: r.data,
+      } as unknown as Feedback));
 
       // Etapa 6: gestaoObra
       const gestao = {
         tarefasGantt: (gtByProj[pr.id] ?? []).map(r => ({
-          id: r.id, nome: r.nome, dataInicio: r.data_inicio, dataFim: r.data_fim,
-          responsavel: r.responsavel, status: r.status, progresso: r.progresso,
-        } as TarefaGantt)),
+          id: r.id, tarefa: r.nome, nome: r.nome,
+          dataInicio: r.data_inicio, dataFim: r.data_fim,
+          responsavel: r.responsavel, status: r.status,
+          progresso: r.progresso, percentual: r.progresso,
+        } as unknown as TarefaGantt)),
         compras: (coByProj[pr.id] ?? []).map(r => ({
-          id: r.id, item: r.item, fornecedor: r.fornecedor, valor: r.valor,
+          id: r.id, item: r.item, descricao: r.item, fornecedor: r.fornecedor,
+          valor: r.valor, data: r.data_pedido, pagoPor: null,
           dataPedido: r.data_pedido, dataEntrega: r.data_entrega, status: r.status,
-        } as Compra)),
+        } as unknown as Compra)),
         checklists: (chByProj[pr.id] ?? []).map(r => ({
           id: r.id, data: r.data, responsavel: r.responsavel, itens: r.itens ?? [],
-        } as ChecklistDiario)),
+        } as unknown as ChecklistDiario)),
         relatorios: (relByProj[pr.id] ?? []).map(r => ({
-          id: r.id, semana: r.semana, resumo: r.resumo, realizado: r.realizado,
-          proximosPassos: r.proximos_passos, bloqueios: r.bloqueios, data: r.data,
-        } as RelatorioSemanal)),
+          id: r.id, semana: r.semana, periodo: r.semana,
+          resumo: r.resumo, realizado: r.realizado,
+          proximosPassos: r.proximos_passos, bloqueios: r.bloqueios,
+          data: r.data, percentualAvanco: 0, alertas: [], fotos: [],
+        } as unknown as RelatorioSemanal)),
         fotosObra: (foByProj[pr.id] ?? []).map(r => ({
-          id: r.id, data: r.data, descricao: r.descricao, fotos: r.fotos ?? [],
-        } as FotoObra)),
+          id: r.id, data: r.data, descricao: r.descricao,
+          fotos: r.fotos ?? [], arquivos: r.fotos ?? [],
+        } as unknown as FotoObra)),
       };
       if (gestao.tarefasGantt.length || gestao.compras.length || gestao.checklists.length ||
           gestao.relatorios.length || gestao.fotosObra.length) {
@@ -218,7 +224,7 @@ async function saveAll({ users, projects }: SaveInput) {
       data_inicio: e.dataInicio ?? null, data_liberacao: e.dataLiberacao ?? null,
       liberada_por: e.liberadaPor ?? null,
       observacao_liberacao: e.observacaoLiberacao ?? null,
-      data_aceite_cliente: e.dataAceiteCliente ?? null,
+      data_aceite_cliente: (e as any).dataAceiteCliente ?? null,
     }));
     if (etapasRows.length) {
       await supabase.from('etapas').upsert(etapasRows, { onConflict: 'project_id,numero' });
@@ -256,7 +262,7 @@ async function saveAll({ users, projects }: SaveInput) {
     // Gestão de obra (etapa 6)
     const go: any = (p.etapasData?.[6] as any)?.gestaoObra ?? {};
     await replaceChildren('gantt_tarefas', pid, (go.tarefasGantt ?? []).map((t: TarefaGantt) => ({
-      id: t.id, project_id: pid, nome: t.nome,
+      id: t.id, project_id: pid, nome: (t as any).nome ?? (t as any).tarefa ?? '',
       data_inicio: (t as any).dataInicio ?? null, data_fim: (t as any).dataFim ?? null,
       responsavel: (t as any).responsavel ?? null, status: (t as any).status ?? null,
       progresso: (t as any).progresso ?? null,
