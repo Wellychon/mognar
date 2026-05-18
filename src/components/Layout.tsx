@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useStore } from '../store';
 import { useAuth } from '../authStore';
 import { Toast } from './Toast';
@@ -9,9 +9,10 @@ interface LayoutProps {
 }
 
 export function Layout({ children }: LayoutProps) {
-  const { users, currentUser, setCurrentUser, projects } = useStore();
+  const { currentUser, projects } = useStore();
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams();
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -45,7 +46,7 @@ export function Layout({ children }: LayoutProps) {
 
         {/* Logo */}
         <Link
-          to="/projetos"
+          to="/"
           style={{
             fontFamily: 'var(--font-display)',
             fontSize: 22,
@@ -113,7 +114,59 @@ export function Layout({ children }: LayoutProps) {
           }}
         >
           <div style={{ width: 240, display: 'flex', flexDirection: 'column', flex: 1 }}>
-            <div style={{ flex: 1, paddingTop: 12, overflowY: 'auto' }}>
+            <div style={{ flex: 1, paddingTop: 8, overflowY: 'auto' }}>
+              {/* Início */}
+              <button
+                onClick={() => navigate('/')}
+                style={{
+                  width: '100%',
+                  textAlign: 'left',
+                  padding: '10px 16px',
+                  background: location.pathname === '/' ? 'var(--terracotta-tint)' : 'transparent',
+                  border: 'none',
+                  borderLeft: location.pathname === '/' ? '3px solid var(--terracotta)' : '3px solid transparent',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 9,
+                  marginBottom: 2,
+                  transition: 'background 150ms',
+                }}
+                onMouseEnter={e => { if (location.pathname !== '/') e.currentTarget.style.background = 'var(--bone-2)'; }}
+                onMouseLeave={e => { if (location.pathname !== '/') e.currentTarget.style.background = 'transparent'; }}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={location.pathname === '/' ? 'var(--terracotta)' : 'var(--ink-500)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                  <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+                <span style={{ fontSize: 13, fontWeight: 600, color: location.pathname === '/' ? 'var(--terracotta)' : 'var(--ink-700)' }}>
+                  Início
+                </span>
+              </button>
+
+              <p style={{ fontSize: 10, fontWeight: 700, color: 'var(--ink-300)', padding: '8px 16px 4px', letterSpacing: 0.8, textTransform: 'uppercase' }}>
+                Projetos
+              </p>
+
+              {currentUser.role === 'FuerzaAdmin' && (
+                <button
+                  onClick={() => navigate('/fuerza/contas')}
+                  style={{
+                    width: '100%',
+                    textAlign: 'left',
+                    padding: '10px 16px',
+                    background: location.pathname === '/fuerza/contas' ? '#1a1a2e' : 'transparent',
+                    border: 'none',
+                    borderLeft: location.pathname === '/fuerza/contas' ? '3px solid #a78bfa' : '3px solid transparent',
+                    cursor: 'pointer',
+                    marginBottom: 4,
+                  }}
+                >
+                  <p style={{ fontSize: 12, fontWeight: 700, color: '#a78bfa', margin: 0, letterSpacing: 0.5 }}>
+                    GERENCIADOR DE CONTAS
+                  </p>
+                </button>
+              )}
               {projects.length === 0 ? (
                 <p style={{ fontSize: 12, color: 'var(--ink-300)', padding: '12px 16px' }}>Nenhum projeto ainda.</p>
               ) : (
@@ -152,25 +205,54 @@ export function Layout({ children }: LayoutProps) {
               )}
             </div>
 
-            <div style={{ padding: 12, borderTop: '1px solid var(--bone)' }}>
+            <div style={{ borderTop: '1px solid var(--bone)' }}>
               <button
                 onClick={() => navigate('/projetos/novo')}
                 style={{
                   width: '100%',
-                  padding: '8px',
+                  padding: '8px 12px',
                   fontSize: 13,
                   fontWeight: 500,
                   color: 'var(--terracotta)',
                   background: 'transparent',
-                  border: '1px solid var(--terracotta)',
-                  borderRadius: 'var(--r-md)',
+                  border: 'none',
+                  borderBottom: '1px solid var(--bone)',
                   cursor: 'pointer',
                   transition: 'background 150ms',
+                  textAlign: 'center',
                 }}
                 onMouseEnter={e => (e.currentTarget.style.background = 'var(--terracotta-tint)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
                 + Novo Projeto
+              </button>
+
+              {/* Configurações */}
+              <button
+                onClick={() => navigate('/configuracoes')}
+                style={{
+                  width: '100%',
+                  textAlign: 'left',
+                  padding: '10px 16px',
+                  background: location.pathname === '/configuracoes' ? 'var(--bone)' : 'transparent',
+                  border: 'none',
+                  borderLeft: location.pathname === '/configuracoes' ? '3px solid var(--ink-500)' : '3px solid transparent',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 9,
+                  transition: 'background 150ms',
+                }}
+                onMouseEnter={e => { if (location.pathname !== '/configuracoes') e.currentTarget.style.background = 'var(--bone-2)'; }}
+                onMouseLeave={e => { if (location.pathname !== '/configuracoes') e.currentTarget.style.background = 'transparent'; }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-500)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="3"/>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
+                <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--ink-700)' }}>
+                  Configurações
+                </span>
               </button>
             </div>
           </div>

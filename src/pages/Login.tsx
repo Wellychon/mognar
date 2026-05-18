@@ -14,15 +14,13 @@ export function Login() {
     e.preventDefault();
     setError('');
     setLoading(true);
-    setTimeout(() => {
-      const ok = login(email, password);
-      if (ok) {
-        navigate('/projetos', { replace: true });
-      } else {
-        setError('E-mail ou senha incorretos.');
-        setLoading(false);
-      }
-    }, 400);
+    const ok = login(email, password);
+    if (ok) {
+      navigate('/projetos', { replace: true });
+    } else {
+      setError('E-mail ou senha incorretos.');
+      setLoading(false);
+    }
   }
 
   return (

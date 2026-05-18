@@ -1,6 +1,5 @@
-@import "tailwindcss";
-
 @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
 
 :root {
   /* Brand */
@@ -332,4 +331,40 @@ body {
   border-left: 1.5px dashed var(--terracotta);
   pointer-events: none;
   z-index: 2;
+}
+
+/* ── Print / PDF export ─────────────────────────────────── */
+
+@media print {
+  body { background: #fff !important; }
+
+  .no-print { display: none !important; }
+
+  .print-page-break { page-break-before: always; }
+
+  /* Sidebar e layout chrome */
+  nav, aside, header { display: none !important; }
+
+  /* Accordion sempre aberto */
+  [data-accordion-content] { display: block !important; max-height: none !important; overflow: visible !important; }
+
+  /* Remove sombras e bordas decorativas */
+  * { box-shadow: none !important; }
+
+  /* Cabeçalho do PDF */
+  .pdf-header {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #1d242a;
+    margin-bottom: 24px;
+  }
+
+  /* Imagens — limitar altura para não explodir página */
+  img { max-height: 200px; object-fit: contain; }
+
+  /* iframe de PDF não imprime bem — esconder e mostrar link */
+  iframe { display: none !important; }
+  .pdf-iframe-fallback { display: block !important; }
 }

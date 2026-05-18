@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useStore, USERS } from '../store';
 import { ETAPAS_NOMES } from '../types';
 import type { EtapaStatus, Project } from '../types';
+import { KpiDashboard } from '../components/KpiDashboard';
 
 const STATUS_CFG: Record<EtapaStatus, { label: string; color: string; bg: string; border: string }> = {
   em_andamento:        { label: 'Em andamento',    color: '#2563EB', bg: '#EFF6FF', border: '#BFDBFE' },
@@ -332,8 +333,11 @@ export function ProjectDashboard() {
           ))}
         </div>
 
+        {/* KPIs do projeto */}
+        <KpiDashboard projects={[project]} title="KPIs deste projeto" />
+
         {/* Stage cards */}
-        <div className="mb-10">
+        <div className="mb-10" style={{ marginTop: 40 }}>
           <h2 className="text-xs font-semibold uppercase tracking-wide mb-4" style={{ color: 'var(--ink-500)' }}>Etapas do projeto</h2>
           <div className="grid grid-cols-2 gap-4">
             {project.etapas.map((etapa, idx) => {
