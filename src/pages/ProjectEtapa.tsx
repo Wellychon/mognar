@@ -13,7 +13,7 @@ import { Etapa6GestaoObra } from './etapas/Etapa6GestaoObra';
 export function ProjectEtapa() {
   const { id, n } = useParams<{ id: string; n: string }>();
   const navigate = useNavigate();
-  const { projects } = useStore();
+  const { projects, currentUser } = useStore();
 
   const project = projects.find(p => p.id === id);
   const etapaNum = parseInt(n || '1');
@@ -23,6 +23,24 @@ export function ProjectEtapa() {
       <div className="p-8 text-center text-gray-500">
         <p>Projeto não encontrado.</p>
         <button onClick={() => navigate('/projetos')} className="mt-4 text-blue-600 underline text-sm">Voltar</button>
+      </div>
+    );
+  }
+
+  if (currentUser?.role === 'Engenheiro' && (etapaNum === 1 || etapaNum === 2)) {
+    return (
+      <div className="p-8 text-center text-gray-500 max-w-md mx-auto my-12 bg-white border rounded-xl shadow-sm">
+        <span className="text-4xl">🔒</span>
+        <h2 className="text-lg font-bold text-gray-900 mt-4">Acesso Restrito</h2>
+        <p className="text-sm text-gray-500 mt-2">
+          Como Engenheiro, você não possui acesso às Etapas 1 e 2 (Briefing e Estudo Preliminar).
+        </p>
+        <button
+          onClick={() => navigate(`/projetos/${project.id}`)}
+          className="mt-6 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          Voltar para o painel do projeto
+        </button>
       </div>
     );
   }

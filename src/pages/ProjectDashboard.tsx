@@ -260,14 +260,18 @@ export function ProjectDashboard() {
         </div>
 
         {/* Upload button */}
-        <button
-          onClick={() => heroInputRef.current?.click()}
-          className="absolute top-3 right-3 px-3 py-1.5 text-xs font-medium rounded-lg backdrop-blur-sm transition-opacity hover:opacity-100 opacity-70"
-          style={{ background: 'rgba(255,255,255,.2)', color: '#fff', border: '1px solid rgba(255,255,255,.3)' }}
-        >
-          {project.imagemHero ? 'Trocar foto' : '+ Adicionar foto'}
-        </button>
-        <input ref={heroInputRef} type="file" accept="image/*" className="hidden" onChange={handleHeroUpload} />
+        {currentUser.role !== 'Cliente' && (
+          <>
+            <button
+              onClick={() => heroInputRef.current?.click()}
+              className="absolute top-3 right-3 px-3 py-1.5 text-xs font-medium rounded-lg backdrop-blur-sm transition-opacity hover:opacity-100 opacity-70"
+              style={{ background: 'rgba(255,255,255,.2)', color: '#fff', border: '1px solid rgba(255,255,255,.3)' }}
+            >
+              {project.imagemHero ? 'Trocar foto' : '+ Adicionar foto'}
+            </button>
+            <input ref={heroInputRef} type="file" accept="image/*" className="hidden" onChange={handleHeroUpload} />
+          </>
+        )}
       </div>
 
       <div className="p-8">
@@ -281,7 +285,23 @@ export function ProjectDashboard() {
             </div>
           </div>
 
-          {project.finalizado ? (
+          {currentUser.role === 'Cliente' ? (
+            project.finalizado ? (
+              <span
+                className="px-3 py-1.5 rounded-full text-xs font-semibold"
+                style={{ background: 'var(--green-bg)', color: 'var(--green)' }}
+              >
+                ✓ Finalizado em {fmt(project.dataFinalizacao)}
+              </span>
+            ) : (
+              <span
+                className="px-3 py-1.5 rounded-full text-xs font-semibold"
+                style={{ background: 'var(--blue-bg)', color: 'var(--blue)' }}
+              >
+                Em andamento
+              </span>
+            )
+          ) : project.finalizado ? (
             <div className="flex items-center gap-3">
               <span
                 className="px-3 py-1.5 rounded-full text-xs font-semibold"

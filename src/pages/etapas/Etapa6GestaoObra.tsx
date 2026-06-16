@@ -25,7 +25,7 @@ function SecaoCronogramaGantt({ project }: { project: Project }) {
   const { adicionarTarefaGantt, atualizarTarefaGantt, currentUser } = useStore();
   const gestaoObra = project.etapasData[6]?.gestaoObra;
   const tarefas = gestaoObra?.tarefasGantt ?? [];
-  const isAdmin = currentUser?.role === 'Admin' || currentUser?.role === 'FuerzaAdmin';
+  const canEdit = currentUser?.role === 'Admin' || currentUser?.role === 'FuerzaAdmin' || currentUser?.role === 'Engenheiro' || currentUser?.role === 'Gestor';
 
   const [nova, setNova] = useState({ tarefa: '', responsavel: '', dataInicio: '', dataFim: '', percentual: 0, status: 'nao_iniciada' as const, observacao: '' });
   const [adding, setAdding] = useState(false);
@@ -48,7 +48,7 @@ function SecaoCronogramaGantt({ project }: { project: Project }) {
     <div className="bg-white rounded-lg shadow p-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-gray-800">2. Cronograma de Obra</h2>
-        {isAdmin && !adding && (
+        {canEdit && !adding && (
           <button onClick={() => setAdding(true)} className="text-sm bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700">+ Tarefa</button>
         )}
       </div>
@@ -93,7 +93,7 @@ function SecaoCronogramaGantt({ project }: { project: Project }) {
                 <th className="pb-2 pr-4">Progresso</th>
                 <th className="pb-2 pr-4">Status</th>
                 <th className="pb-2 pr-4">Observação</th>
-                {isAdmin && <th className="pb-2">Atualizar</th>}
+                {canEdit && <th className="pb-2">Atualizar</th>}
               </tr>
             </thead>
             <tbody>
@@ -117,7 +117,7 @@ function SecaoCronogramaGantt({ project }: { project: Project }) {
                     </span>
                   </td>
                   <td className="py-2 pr-4 text-xs text-gray-500 max-w-[160px]">{t.observacao || '—'}</td>
-                  {isAdmin && (
+                  {canEdit && (
                     <td className="py-2">
                       <select className="text-xs border border-gray-200 rounded px-1 py-0.5" value={t.status} onChange={e => atualizarTarefaGantt(project.id, t.id, { status: e.target.value as any })}>
                         <option value="nao_iniciada">Não iniciada</option>
@@ -141,6 +141,7 @@ function SecaoChecklistDiario({ project }: { project: Project }) {
   const { adicionarChecklist, toggleItemChecklist, currentUser } = useStore();
   const gestaoObra = project.etapasData[6]?.gestaoObra;
   const checklists = gestaoObra?.checklists ?? [];
+  const isCliente = currentUser?.role === 'Cliente';
 
   const [novaData, setNovaData] = useState('');
   const [novaResp, setNovaResp] = useState(currentUser?.name ?? '');
@@ -164,7 +165,7 @@ function SecaoChecklistDiario({ project }: { project: Project }) {
     <div className="bg-white rounded-lg shadow p-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-gray-800">3. Checklist Diário</h2>
-        {!adding && (
+        {!adding && !isCliente && (
           <button onClick={() => setAdding(true)} className="text-sm bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700">+ Novo Checklist</button>
         )}
       </div>
@@ -207,8 +208,8 @@ function SecaoChecklistDiario({ project }: { project: Project }) {
                 </div>
                 <div className="space-y-1">
                   {cl.itens.map(item => (
-                    <label key={item.id} className="flex items-center gap-2 text-sm cursor-pointer">
-                      <input type="checkbox" checked={item.concluido} onChange={() => toggleItemChecklist(project.id, cl.id, item.id)} className="rounded" />
+                    <label key={item.id} className={`flex items-center gap-2 text-sm ${isCliente ? '' : 'cursor-pointer'}`}>
+                      <input type="checkbox" checked={item.concluido} disabled={isCliente} onChange={() => toggleItemChecklist(project.id, cl.id, item.id)} className="rounded" />
                       <span className={item.concluido ? 'line-through text-gray-400' : 'text-gray-700'}>{item.texto}</span>
                     </label>
                   ))}
@@ -227,7 +228,8 @@ function SecaoCompras({ project }: { project: Project }) {
   const { adicionarCompra, atualizarStatusCompra, currentUser } = useStore();
   const gestaoObra = project.etapasData[6]?.gestaoObra;
   const compras = gestaoObra?.compras ?? [];
-  const isAdmin = currentUser?.role === 'Admin' || currentUser?.role === 'FuerzaAdmin';
+  const canEdit = currentUser?.role === 'Admin' || currentUser?.role === 'FuerzaAdmin' || currentUser?.role === 'Gestor';
+  const isCliente = currentUser?.role === 'Cliente';
 
   const [nova, setNova] = useState({
     data: '',
@@ -277,7 +279,7 @@ function SecaoCompras({ project }: { project: Project }) {
     <div className="bg-white rounded-lg shadow p-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-gray-800">4. Registro de Compras</h2>
-        {!adding && (
+        {!adding && !isCliente && (
           <button onClick={() => setAdding(true)} className="text-sm bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700">+ Compra</button>
         )}
       </div>
@@ -396,7 +398,7 @@ function SecaoCompras({ project }: { project: Project }) {
                       {c.link ? <a href={c.link} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline">Ver</a> : <span className="text-xs text-gray-400">—</span>}
                     </td>
                     <td className="py-2">
-                      {isAdmin && c.status === 'pendente' ? (
+                      {canEdit && c.status === 'pendente' ? (
                         <button onClick={() => atualizarStatusCompra(project.id, c.id, 'pago')} className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full hover:bg-green-200">Marcar pago</button>
                       ) : (
                         <span className={`text-xs px-2 py-0.5 rounded-full ${c.status === 'pago' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
@@ -416,9 +418,10 @@ function SecaoCompras({ project }: { project: Project }) {
 }
 
 function SecaoRelatorios({ project }: { project: Project }) {
-  const { adicionarRelatorio } = useStore();
+  const { adicionarRelatorio, currentUser } = useStore();
   const gestaoObra = project.etapasData[6]?.gestaoObra;
   const relatorios = gestaoObra?.relatorios ?? [];
+  const isCliente = currentUser?.role === 'Cliente';
 
   const [semana, setSemana] = useState('');
   const [periodo, setPeriodo] = useState('');
@@ -446,7 +449,7 @@ function SecaoRelatorios({ project }: { project: Project }) {
     <div className="bg-white rounded-lg shadow p-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-gray-800">5. Relatório Semanal</h2>
-        {!adding && (
+        {!adding && !isCliente && (
           <button onClick={() => setAdding(true)} className="text-sm bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700">+ Relatório</button>
         )}
       </div>
@@ -510,9 +513,10 @@ function SecaoRelatorios({ project }: { project: Project }) {
 }
 
 function SecaoFotosObra({ project }: { project: Project }) {
-  const { adicionarFotosObra } = useStore();
+  const { adicionarFotosObra, currentUser } = useStore();
   const gestaoObra = project.etapasData[6]?.gestaoObra;
   const fotosGrupos = gestaoObra?.fotosObra ?? [];
+  const isCliente = currentUser?.role === 'Cliente';
 
   const [data, setData] = useState('');
   const [descricao, setDescricao] = useState('');
@@ -530,7 +534,7 @@ function SecaoFotosObra({ project }: { project: Project }) {
     <div className="bg-white rounded-lg shadow p-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-gray-800">6. Fotos da Obra</h2>
-        {!adding && (
+        {!adding && !isCliente && (
           <button onClick={() => setAdding(true)} className="text-sm bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700">+ Adicionar Fotos</button>
         )}
       </div>
@@ -587,7 +591,7 @@ export function Etapa6GestaoObra({ project, etapa, etapaData }: Props) {
   const gestaoObra = etapaData?.gestaoObra;
   const tarefas = gestaoObra?.tarefasGantt ?? [];
   const relatorios = gestaoObra?.relatorios ?? [];
-  const isAdmin = currentUser?.role === 'Admin' || currentUser?.role === 'FuerzaAdmin';
+  const canRelease = currentUser?.role === 'Admin' || currentUser?.role === 'FuerzaAdmin' || currentUser?.role === 'Gestor';
 
   const checklist = [
     { label: 'Cronograma com ao menos uma tarefa', ok: tarefas.length > 0 },
@@ -627,7 +631,7 @@ export function Etapa6GestaoObra({ project, etapa, etapaData }: Props) {
         }}
       />
 
-      {isAdmin && (
+      {canRelease && (
         <SecaoLiberacao
           project={project}
           etapaNum={6}

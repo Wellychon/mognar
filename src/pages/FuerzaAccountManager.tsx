@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import { useStore } from '../store';
 import type { User, UserRole } from '../types';
 
@@ -8,6 +9,7 @@ const ROLE_LABELS: Record<UserRole, string> = {
   Arquiteta: 'Arquiteta',
   Engenheiro: 'Engenheiro',
   Gestor: 'Gestor',
+  Cliente: 'Cliente',
 };
 
 const ROLE_COLORS: Record<UserRole, { bg: string; color: string }> = {
@@ -16,6 +18,7 @@ const ROLE_COLORS: Record<UserRole, { bg: string; color: string }> = {
   Arquiteta: { bg: '#3b1f2b', color: '#f9a8d4' },
   Engenheiro: { bg: '#1f3b2b', color: '#6ee7b7' },
   Gestor: { bg: '#3b2f1f', color: '#fcd34d' },
+  Cliente: { bg: '#1e293b', color: '#3b82f6' },
 };
 
 interface RoleProfile {
@@ -119,6 +122,26 @@ const ROLE_PROFILES: RoleProfile[] = [
       'Não cria projetos nem gerencia usuários',
     ],
   },
+  {
+    role: 'Cliente',
+    accent: '#3b82f6',
+    tagline: 'Acompanhamento transparente e decisões ágeis',
+    coreJob: 'Visualizar o progresso da obra em tempo real e aprovar marcos, projetos e orçamentos com total transparência.',
+    etapas: ['Todas as etapas (modo visualização)'],
+    acesso: [
+      'Acessar o painel visual do projeto (estágios e progresso)',
+      'Visualizar layouts e propostas da arquiteta',
+      'Registrar aceites de escopo de cada etapa',
+      'Visualizar e aprovar o orçamento do projeto (Standard vs Premium)',
+      'Aprovar formalmente os entregáveis técnicos (Aprovação Tripartite)',
+      'Visualizar cronograma, checklist diário e fotos da obra',
+    ],
+    semAcesso: [
+      'Não adiciona ou altera informações de cronograma, compras ou relatórios',
+      'Não altera o cadastro de usuários da plataforma',
+      'Não altera escopos definidos sem aprovação da equipe',
+    ],
+  },
 ];
 
 type Tab = 'projetos' | 'usuarios';
@@ -129,13 +152,17 @@ interface UserModalState {
 }
 
 export function FuerzaAccountManager() {
-  const { users, projects, addUser, updateUser, toggleUserAtivo } = useStore();
+  const { currentUser, users, projects, addUser, updateUser, toggleUserAtivo } = useStore();
   const [tab, setTab] = useState<Tab>('projetos');
   const [modal, setModal] = useState<UserModalState>({ open: false, editing: null });
   const [form, setForm] = useState({ name: '', email: '', role: 'Admin' as UserRole });
   const [search, setSearch] = useState('');
   const [showPerfis, setShowPerfis] = useState(false);
   const [activeProfile, setActiveProfile] = useState<UserRole>('Admin');
+
+  if (!currentUser || currentUser.role !== 'FuerzaAdmin') {
+    return <Navigate to="/" replace />;
+  }
 
   const openAdd = () => {
     setForm({ name: '', email: '', role: 'Admin' });

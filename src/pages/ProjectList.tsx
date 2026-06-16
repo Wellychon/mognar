@@ -28,11 +28,15 @@ function fmtBRL(val: number) {
 }
 
 export function ProjectList() {
-  const { projects } = useStore();
+  const { projects, currentUser } = useStore();
   const navigate = useNavigate();
 
-  const totalPrazo = projects.reduce((acc, p) => acc + (parseInt(p.prazoUteis) || 0), 0);
-  const totalOrcamento = projects.reduce((acc, p) => {
+  const visibleProjects = currentUser.role === 'Cliente'
+    ? projects.filter(p => p.id === 'tari-restaurante-2026')
+    : projects;
+
+  const totalPrazo = visibleProjects.reduce((acc, p) => acc + (parseInt(p.prazoUteis) || 0), 0);
+  const totalOrcamento = visibleProjects.reduce((acc, p) => {
     for (const ed of Object.values(p.etapasData)) {
       if (ed.escopo?.valor) acc += parseBRL(ed.escopo.valor);
     }
@@ -42,13 +46,13 @@ export function ProjectList() {
   return (
     <div className="p-8">
       {/* Stats bar */}
-      {projects.length > 0 && (
+      {visibleProjects.length > 0 && (
         <div
           className="grid grid-cols-3 gap-4 mb-8 p-5 rounded-2xl animate-fade-in"
           style={{ background: 'var(--terracotta-tint)', border: '1px solid var(--bone)' }}
         >
           {[
-            { label: 'Projetos', value: String(projects.length) },
+            { label: 'Projetos', value: String(visibleProjects.length) },
             { label: 'Dias úteis totais', value: `${totalPrazo} dias` },
             { label: 'Orçamento total', value: totalOrcamento > 0 ? fmtBRL(totalOrcamento) : '—' },
           ].map(({ label, value }) => (
@@ -67,18 +71,20 @@ export function ProjectList() {
 
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold" style={{ color: 'var(--ink-900)' }}>Meus Projetos</h1>
-        <button
-          onClick={() => navigate('/projetos/novo')}
-          className="px-4 py-2 text-white text-sm font-medium rounded-lg transition-colors"
-          style={{ background: 'var(--terracotta)' }}
-          onMouseEnter={e => (e.currentTarget.style.background = 'var(--terracotta-hover)')}
-          onMouseLeave={e => (e.currentTarget.style.background = 'var(--terracotta)')}
-        >
-          + Novo Projeto
-        </button>
+        {currentUser.role !== 'Cliente' && (
+          <button
+            onClick={() => navigate('/projetos/novo')}
+            className="px-4 py-2 text-white text-sm font-medium rounded-lg transition-colors"
+            style={{ background: 'var(--terracotta)' }}
+            onMouseEnter={e => (e.currentTarget.style.background = 'var(--terracotta-hover)')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'var(--terracotta)')}
+          >
+            + Novo Projeto
+          </button>
+        )}
       </div>
 
-      {projects.length === 0 ? (
+      {visibleProjects.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">
           <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ background: 'var(--paper)' }}>
             <svg className="w-8 h-8" style={{ color: 'var(--ink-300)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -90,7 +96,7 @@ export function ProjectList() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {projects.map((project, i) => {
+          {visibleProjects.map((project, i) => {
             const etapaAtual = project.etapas.find(e => e.numero === project.etapaAtual);
             const status = statusLabel(project);
             const staggerClass = `stagger-${Math.min(i, 5)}`;

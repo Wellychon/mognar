@@ -137,6 +137,31 @@ export function NewProject() {
   const engenheiros = USERS.filter(u => u.role === 'Engenheiro' || u.role === 'Admin');
   const gestores = USERS.filter(u => u.role === 'Gestor' || u.role === 'Admin');
 
+  const fillTariData = () => {
+    setForm({
+      nome: 'TARI — Restaurante',
+      tipoObra: 'Reforma Comercial',
+      dataInicio: '2026-02-23',
+      prazoUteis: '40',
+      razaoSocial: 'Sabor & Arte Gastronomia Ltda',
+      contato: 'Bruno Ferreira',
+      email: 'bruno@saborarte.com.br',
+      telefone: '(11) 99812-3456',
+      cpfCnpj: '12.345.678/0001-90',
+      endereco: 'Rua das Acácias, nº 87',
+      bairro: 'Vila Madalena',
+      cidade: 'São Paulo',
+      estado: 'SP',
+      cep: '05420-010',
+      areaM2: '210',
+      descricaoImovel: 'Restaurante em galpão industrial com dois pavimentos e mezanino.',
+      arquitetaId: '6', // Maria Laura
+      engenheiroId: '7', // Rafael
+      gestorId: '8', // Joyce
+    });
+    setErrors({});
+  };
+
   return (
     <div className="p-8 max-w-3xl mx-auto">
       <button
@@ -146,7 +171,37 @@ export function NewProject() {
         ← Voltar
       </button>
 
-      <h1 className="text-2xl font-bold text-gray-900 mb-8">Novo Projeto</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <h1 className="text-2xl font-bold text-gray-900">Novo Projeto</h1>
+        <button
+          type="button"
+          onClick={fillTariData}
+          style={{
+            background: 'var(--terracotta-tint)',
+            border: '1px solid var(--terracotta)',
+            color: 'var(--terracotta)',
+            borderRadius: 'var(--r-md)',
+            padding: '8px 16px',
+            fontSize: '13px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            transition: 'all 150ms',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px'
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = 'var(--terracotta)';
+            e.currentTarget.style.color = '#fff';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = 'var(--terracotta-tint)';
+            e.currentTarget.style.color = 'var(--terracotta)';
+          }}
+        >
+          ✨ Preencher com dados do TARI
+        </button>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-10">
         {/* A. Dados do Projeto */}

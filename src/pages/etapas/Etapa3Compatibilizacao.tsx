@@ -35,9 +35,11 @@ function SecaoVisitaTecnica({ compatibilizacao, onUpdate }: {
   compatibilizacao: Compatibilizacao;
   onUpdate: (c: Compatibilizacao) => void;
 }) {
+  const { currentUser } = useStore();
+  const isCliente = currentUser?.role === 'Cliente';
   const vt = compatibilizacao.visitaTecnica;
   const hasData = !!(vt?.data);
-  const [editing, setEditing] = useState(!hasData);
+  const [editing, setEditing] = useState(!hasData && !isCliente);
   const [form, setForm] = useState({ data: vt?.data || '', notas: vt?.notas || '', fotos: vt?.fotos || [] as ArquivoAnexo[] });
 
   const handleSave = () => {
@@ -58,7 +60,7 @@ function SecaoVisitaTecnica({ compatibilizacao, onUpdate }: {
               {vt.fotos.map((a, idx) => <ArquivoItem key={idx} a={a} />)}
             </ul>
           )}
-          <button onClick={() => setEditing(true)} className="text-sm text-blue-600 hover:underline">Editar</button>
+          {!isCliente && <button onClick={() => setEditing(true)} className="text-sm text-blue-600 hover:underline">Editar</button>}
         </div>
       ) : (
         <div className="space-y-4">
@@ -97,9 +99,11 @@ function SecaoParecerTecnico({ compatibilizacao, onUpdate }: {
   compatibilizacao: Compatibilizacao;
   onUpdate: (c: Compatibilizacao) => void;
 }) {
+  const { currentUser } = useStore();
+  const isCliente = currentUser?.role === 'Cliente';
   const pt = compatibilizacao.parecerTecnico;
   const hasData = !!(pt?.texto);
-  const [editing, setEditing] = useState(!hasData);
+  const [editing, setEditing] = useState(!hasData && !isCliente);
   const [texto, setTexto] = useState(pt?.texto || '');
   const [arquivos, setArquivos] = useState<ArquivoAnexo[]>(pt?.arquivos || []);
 
@@ -118,7 +122,7 @@ function SecaoParecerTecnico({ compatibilizacao, onUpdate }: {
               {pt.arquivos.map((a, idx) => <ArquivoItem key={idx} a={a} />)}
             </ul>
           )}
-          <button onClick={() => setEditing(true)} className="text-sm text-blue-600 hover:underline">Editar</button>
+          {!isCliente && <button onClick={() => setEditing(true)} className="text-sm text-blue-600 hover:underline">Editar</button>}
         </div>
       ) : (
         <div className="space-y-4">
@@ -152,6 +156,8 @@ function SecaoPendencias({ compatibilizacao, onUpdate }: {
   compatibilizacao: Compatibilizacao;
   onUpdate: (c: Compatibilizacao) => void;
 }) {
+  const { currentUser } = useStore();
+  const isCliente = currentUser?.role === 'Cliente';
   const [addOpen, setAddOpen] = useState(false);
   const [descricao, setDescricao] = useState('');
   const [responsavel, setResponsavel] = useState<PendenciaResponsavel>('arquiteto');
@@ -200,7 +206,7 @@ function SecaoPendencias({ compatibilizacao, onUpdate }: {
                   {p.responsavel === 'arquiteto' ? 'Arquiteto' : 'Engenheiro'} · {new Date(p.data + 'T12:00:00').toLocaleDateString('pt-BR')}
                 </p>
               </div>
-              {p.status === 'aberta' && (
+              {p.status === 'aberta' && !isCliente && (
                 <button onClick={() => resolver(p.id)} className="text-xs text-green-600 hover:underline shrink-0 no-print">
                   Resolver
                 </button>
@@ -235,9 +241,11 @@ function SecaoPendencias({ compatibilizacao, onUpdate }: {
             </div>
           </div>
         ) : (
-          <button onClick={() => setAddOpen(true)} className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline no-print">
-            + Adicionar pendência
-          </button>
+          !isCliente && (
+            <button onClick={() => setAddOpen(true)} className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline no-print">
+              + Adicionar pendência
+            </button>
+          )
         )}
       </div>
     </Accordion>
@@ -251,7 +259,7 @@ export function Etapa3Compatibilizacao({ project, etapa, etapaData }: {
 }) {
   const navigate = useNavigate();
   const { updateEtapaData, liberarEtapa, showToast, currentUser } = useStore();
-  const isAdmin = currentUser.role === 'Admin' || currentUser.role === 'FuerzaAdmin';
+  const canRelease = currentUser.role === 'Admin' || currentUser.role === 'FuerzaAdmin' || currentUser.role === 'Gestor';
 
   const comp: Compatibilizacao = etapaData.compatibilizacao || { pendencias: [] };
   const pendenciasAbertas = comp.pendencias.filter(p => p.status === 'aberta').length;
@@ -287,7 +295,7 @@ export function Etapa3Compatibilizacao({ project, etapa, etapaData }: {
         onUpdate={handleUpdate}
       />
 
-      {isAdmin && (
+      {canRelease && (
         <SecaoLiberacao
           project={project}
           etapaNum={3}

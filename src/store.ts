@@ -10,15 +10,16 @@ import type {
 import { ETAPAS_NOMES } from './types';
 
 const USERS: User[] = [
-  { id: '0', name: 'Fuerza Studio', email: 'admin@fuerzastudio.com.br', role: 'FuerzaAdmin', ativo: true },
+  { id: '0', name: 'Admin Fuerza', email: 'admin@mognar.com.br', role: 'FuerzaAdmin', ativo: true },
   { id: '1', name: 'Ana Lima', email: 'ana@mognar.com.br', role: 'Admin', ativo: true },
   { id: '2', name: 'Carla Mendes', email: 'carla@mognar.com.br', role: 'Arquiteta', ativo: true },
   { id: '3', name: 'Bruno Costa', email: 'bruno@mognar.com.br', role: 'Engenheiro', ativo: true },
   { id: '4', name: 'Diego Rocha', email: 'diego@mognar.com.br', role: 'Gestor', ativo: true },
   { id: '5', name: 'Marcelo', email: 'marcelo@tari.com.br', role: 'Admin', ativo: true },
-  { id: '6', name: 'Maria Laura', email: 'marialaurа@tari.com.br', role: 'Arquiteta', ativo: true },
-  { id: '7', name: 'Rafael', email: 'rafael@tari.com.br', role: 'Engenheiro', ativo: true },
-  { id: '8', name: 'Joyce', email: 'joyce@tari.com.br', role: 'Gestor', ativo: true },
+  { id: '6', name: 'Maria Laura', email: 'maria@mognar.com.br', role: 'Arquiteta', ativo: true },
+  { id: '7', name: 'Rafael', email: 'rafael@mognar.com.br', role: 'Engenheiro', ativo: true },
+  { id: '8', name: 'Joyce', email: 'joyce@mognar.com.br', role: 'Gestor', ativo: true },
+  { id: '9', name: 'Cliente TARI', email: 'cliente@tari.com.br', role: 'Cliente', ativo: true },
 ];
 
 function createEtapas() {
@@ -733,8 +734,9 @@ export const useStore = create<AppState>()(
       isAuthenticated: false,
 
       login: (email, password) => {
-        if (email === 'admin@mognar.com.br' && password === 'mognar2026') {
-          set({ isAuthenticated: true });
+        const user = USERS.find(u => u.email === email.toLowerCase());
+        if (user && password === 'mognar2026') {
+          set({ isAuthenticated: true, currentUser: user });
           return true;
         }
         return false;

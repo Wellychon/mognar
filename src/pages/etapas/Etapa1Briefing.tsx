@@ -13,8 +13,10 @@ function SecaoPreferencias({ preferencias, onSave }: {
   preferencias?: PreferenciasDesejos;
   onSave: (p: PreferenciasDesejos) => void;
 }) {
+  const { currentUser } = useStore();
+  const isCliente = currentUser?.role === 'Cliente';
   const hasData = !!(preferencias?.texto);
-  const [editing, setEditing] = useState(!hasData);
+  const [editing, setEditing] = useState(!hasData && !isCliente);
   const [texto, setTexto] = useState(preferencias?.texto || '');
   const [refs, setRefs] = useState<ArquivoAnexo[]>(preferencias?.referencias || []);
 
@@ -43,12 +45,14 @@ function SecaoPreferencias({ preferencias, onSave }: {
               </ul>
             </div>
           )}
-          <button onClick={() => setEditing(true)} className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline">
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-            </svg>
-            Editar preferências
-          </button>
+          {!isCliente && (
+            <button onClick={() => setEditing(true)} className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+              Editar preferências
+            </button>
+          )}
         </div>
       ) : (
         <div className="space-y-4">
@@ -96,7 +100,7 @@ export function Etapa1Briefing({ project, etapa, etapaData }: {
 }) {
   const navigate = useNavigate();
   const { updateEtapaData, liberarEtapa, registrarAceite, showToast, currentUser } = useStore();
-  const isAdmin = currentUser.role === 'Admin' || currentUser.role === 'FuerzaAdmin';
+  const canRelease = currentUser.role === 'Admin' || currentUser.role === 'FuerzaAdmin' || currentUser.role === 'Gestor';
 
   const checklist = [
     { label: 'Escopo contratado preenchido', ok: !!(etapaData.escopo?.descricao) },
@@ -159,7 +163,7 @@ export function Etapa1Briefing({ project, etapa, etapaData }: {
         }}
       />
 
-      {isAdmin && (
+      {canRelease && (
         <SecaoLiberacao
           project={project}
           etapaNum={1}

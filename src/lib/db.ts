@@ -88,7 +88,7 @@ export async function loadAll(): Promise<LoadedState | null> {
 
     if (!p.data?.length) return null; // banco vazio → usa seed local
 
-    const users: User[] = (u.data ?? []).map(r => ({
+    const users: User[] = (u.data ?? []).map((r: any) => ({
       id: r.id, name: r.name, email: r.email, role: r.role, ativo: r.ativo,
     }));
 
@@ -103,7 +103,7 @@ export async function loadAll(): Promise<LoadedState | null> {
     const relByProj = groupBy(rel.data ?? [], 'project_id');
     const foByProj = groupBy(fo.data ?? [], 'project_id');
 
-    const projects: Project[] = (p.data ?? []).map(pr => {
+    const projects: Project[] = (p.data ?? []).map((pr: any) => {
       const etapas: EtapaInfo[] = (etapasByProj[pr.id] ?? [])
         .sort((a, b) => a.numero - b.numero)
         .map(e => ({

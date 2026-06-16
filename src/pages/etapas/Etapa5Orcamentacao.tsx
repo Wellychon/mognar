@@ -9,12 +9,13 @@ function formatMoeda(value: number) {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
-function TabelaOrcamento({ titulo, itens, faixa, onAdd, onRemove }: {
+function TabelaOrcamento({ titulo, itens, faixa, onAdd, onRemove, readOnly = false }: {
   titulo: string;
   itens: ItemOrcamento[];
   faixa: FaixaOrcamento;
   onAdd: (item: ItemOrcamento) => void;
   onRemove: (id: string) => void;
+  readOnly?: boolean;
 }) {
   const [addOpen, setAddOpen] = useState(false);
   const [form, setForm] = useState<Omit<ItemOrcamento, 'id'>>({
@@ -43,7 +44,7 @@ function TabelaOrcamento({ titulo, itens, faixa, onAdd, onRemove }: {
               <th className="text-right px-3 py-2 text-xs font-medium text-gray-500 uppercase w-28">Standard</th>
               <th className="text-right px-3 py-2 text-xs font-medium text-gray-500 uppercase w-28">Premium</th>
               <th className="text-right px-3 py-2 text-xs font-medium text-gray-500 uppercase w-28">Total ({faixa})</th>
-              <th className="w-8 no-print" />
+              {!readOnly && <th className="w-8 no-print" />}
             </tr>
           </thead>
           <tbody>
@@ -57,18 +58,20 @@ function TabelaOrcamento({ titulo, itens, faixa, onAdd, onRemove }: {
                 <td className="px-3 py-2 text-right font-medium text-gray-800">
                   {formatMoeda(item.quantidade * (faixa === 'standard' ? item.valorStandard : item.valorPremium))}
                 </td>
-                <td className="px-3 py-2 text-right no-print">
-                  <button onClick={() => onRemove(item.id)} className="text-gray-400 hover:text-red-500 transition-colors">
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </td>
+                {!readOnly && (
+                  <td className="px-3 py-2 text-right no-print">
+                    <button onClick={() => onRemove(item.id)} className="text-gray-400 hover:text-red-500 transition-colors">
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </td>
+                )}
               </tr>
             ))}
             {itens.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-3 py-4 text-center text-gray-400 text-sm italic">Nenhum item adicionado.</td>
+                <td colSpan={readOnly ? 6 : 7} className="px-3 py-4 text-center text-gray-400 text-sm italic">Nenhum item adicionado.</td>
               </tr>
             )}
           </tbody>
@@ -76,52 +79,54 @@ function TabelaOrcamento({ titulo, itens, faixa, onAdd, onRemove }: {
             <tr className="bg-gray-50 border-t-2 border-gray-200">
               <td colSpan={5} className="px-3 py-2 text-sm font-semibold text-gray-700 text-right">Total</td>
               <td className="px-3 py-2 text-right font-bold text-gray-900">{formatMoeda(total)}</td>
-              <td className="no-print" />
+              {!readOnly && <td className="no-print" />}
             </tr>
           </tfoot>
         </table>
       </div>
 
-      {addOpen ? (
-        <div className="p-3 border border-gray-200 rounded-lg space-y-3">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="col-span-2">
-              <label className="block text-xs font-medium text-gray-700 mb-1">Descrição</label>
-              <input type="text" value={form.descricao} onChange={e => setForm(f => ({ ...f, descricao: e.target.value }))}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      {!readOnly && (
+        addOpen ? (
+          <div className="p-3 border border-gray-200 rounded-lg space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2">
+                <label className="block text-xs font-medium text-gray-700 mb-1">Descrição</label>
+                <input type="text" value={form.descricao} onChange={e => setForm(f => ({ ...f, descricao: e.target.value }))}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Unidade</label>
+                <input type="text" value={form.unidade} onChange={e => setForm(f => ({ ...f, unidade: e.target.value }))}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Quantidade</label>
+                <input type="number" min={1} value={form.quantidade} onChange={e => setForm(f => ({ ...f, quantidade: Number(e.target.value) }))}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Valor Standard (R$)</label>
+                <input type="number" min={0} step={0.01} value={form.valorStandard} onChange={e => setForm(f => ({ ...f, valorStandard: Number(e.target.value) }))}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Valor Premium (R$)</label>
+                <input type="number" min={0} step={0.01} value={form.valorPremium} onChange={e => setForm(f => ({ ...f, valorPremium: Number(e.target.value) }))}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
             </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Unidade</label>
-              <input type="text" value={form.unidade} onChange={e => setForm(f => ({ ...f, unidade: e.target.value }))}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Quantidade</label>
-              <input type="number" min={1} value={form.quantidade} onChange={e => setForm(f => ({ ...f, quantidade: Number(e.target.value) }))}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Valor Standard (R$)</label>
-              <input type="number" min={0} step={0.01} value={form.valorStandard} onChange={e => setForm(f => ({ ...f, valorStandard: Number(e.target.value) }))}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Valor Premium (R$)</label>
-              <input type="number" min={0} step={0.01} value={form.valorPremium} onChange={e => setForm(f => ({ ...f, valorPremium: Number(e.target.value) }))}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <div className="flex gap-2">
+              <button onClick={handleAdd} className="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                Adicionar
+              </button>
+              <button onClick={() => setAddOpen(false)} className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors">Cancelar</button>
             </div>
           </div>
-          <div className="flex gap-2">
-            <button onClick={handleAdd} className="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors">
-              Adicionar
-            </button>
-            <button onClick={() => setAddOpen(false)} className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors">Cancelar</button>
-          </div>
-        </div>
-      ) : (
-        <button onClick={() => setAddOpen(true)} className="text-sm text-blue-600 hover:underline no-print">
-          + Adicionar item
-        </button>
+        ) : (
+          <button onClick={() => setAddOpen(true)} className="text-sm text-blue-600 hover:underline no-print">
+            + Adicionar item
+          </button>
+        )
       )}
     </div>
   );
@@ -132,6 +137,8 @@ function SecaoAprovacaoCliente({ orcamentacao, onUpdate, projectNome }: {
   onUpdate: (o: Orcamentacao) => void;
   projectNome: string;
 }) {
+  const { currentUser } = useStore();
+  const isCliente = currentUser?.role === 'Cliente';
   const [faixaSelecionada, setFaixaSelecionada] = useState<FaixaOrcamento>('standard');
   const [nomeCliente, setNomeCliente] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
@@ -197,10 +204,16 @@ function SecaoAprovacaoCliente({ orcamentacao, onUpdate, projectNome }: {
                 <p className="text-lg font-bold text-blue-600 mt-1">{formatMoeda(totalPremium)}</p>
               </div>
             </div>
-            <button onClick={() => setModalOpen(true)}
-              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors no-print">
-              Registrar aprovação do cliente
-            </button>
+            {isCliente ? (
+              <p className="text-sm text-yellow-600 bg-yellow-50 border border-yellow-100 rounded-lg p-3 text-center">
+                Aguardando registro da aprovação formal pela equipe Mognar.
+              </p>
+            ) : (
+              <button onClick={() => setModalOpen(true)}
+                className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors no-print">
+                Registrar aprovação do cliente
+              </button>
+            )}
           </div>
         )}
       </Accordion>
@@ -247,7 +260,10 @@ export function Etapa5Orcamentacao({ project, etapa, etapaData }: {
 }) {
   const navigate = useNavigate();
   const { updateEtapaData, liberarEtapa, showToast, currentUser } = useStore();
-  const isAdmin = currentUser.role === 'Admin' || currentUser.role === 'FuerzaAdmin';
+  const canRelease = currentUser.role === 'Admin' || currentUser.role === 'FuerzaAdmin' || currentUser.role === 'Gestor';
+  const isArquiteta = currentUser.role === 'Arquiteta';
+  const canEditMaterials = currentUser.role === 'Admin' || currentUser.role === 'FuerzaAdmin' || currentUser.role === 'Engenheiro';
+  const canEditFinishes = currentUser.role === 'Admin' || currentUser.role === 'FuerzaAdmin' || currentUser.role === 'Arquiteta';
 
   const orc: Orcamentacao = etapaData.orcamentacao || {
     itensMateriais: [], itensMaoDeObra: [], itensAcabamentos: [],
@@ -293,23 +309,39 @@ export function Etapa5Orcamentacao({ project, etapa, etapaData }: {
       <SecaoResumo project={project} />
 
       <Accordion title="2. Orçamento de Materiais Brutos">
-        <TabelaOrcamento
-          titulo="Materiais"
-          itens={orc.itensMateriais}
-          faixa={faixa}
-          onAdd={addMaterial}
-          onRemove={removeMaterial}
-        />
+        {isArquiteta ? (
+          <div className="p-4 bg-gray-50 border rounded-lg text-gray-500 text-sm flex items-center gap-2">
+            <span>🔒</span>
+            <span>Acesso restrito ao Engenheiro e Administradores.</span>
+          </div>
+        ) : (
+          <TabelaOrcamento
+            titulo="Materiais"
+            itens={orc.itensMateriais}
+            faixa={faixa}
+            onAdd={addMaterial}
+            onRemove={removeMaterial}
+            readOnly={!canEditMaterials}
+          />
+        )}
       </Accordion>
 
       <Accordion title="3. Orçamento de Mão de Obra">
-        <TabelaOrcamento
-          titulo="Mão de Obra"
-          itens={orc.itensMaoDeObra ?? []}
-          faixa={faixa}
-          onAdd={addMaoDeObra}
-          onRemove={removeMaoDeObra}
-        />
+        {isArquiteta ? (
+          <div className="p-4 bg-gray-50 border rounded-lg text-gray-500 text-sm flex items-center gap-2">
+            <span>🔒</span>
+            <span>Acesso restrito ao Engenheiro e Administradores.</span>
+          </div>
+        ) : (
+          <TabelaOrcamento
+            titulo="Mão de Obra"
+            itens={orc.itensMaoDeObra ?? []}
+            faixa={faixa}
+            onAdd={addMaoDeObra}
+            onRemove={removeMaoDeObra}
+            readOnly={!canEditMaterials}
+          />
+        )}
       </Accordion>
 
       <Accordion title="4. Orçamento de Acabamentos">
@@ -320,12 +352,14 @@ export function Etapa5Orcamentacao({ project, etapa, etapaData }: {
             faixa={faixa}
             onAdd={addAcabamento}
             onRemove={removeAcabamento}
+            readOnly={!canEditFinishes}
           />
 
           <div className="flex items-center justify-between pt-2 border-t border-gray-200">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Validade do orçamento</label>
               <input type="date" value={orc.dataValidade}
+                disabled={!canEditMaterials && !canEditFinishes}
                 onChange={e => handleUpdate({ ...orc, dataValidade: e.target.value })}
                 className="px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
             </div>
@@ -343,7 +377,7 @@ export function Etapa5Orcamentacao({ project, etapa, etapaData }: {
         projectNome={project.nome}
       />
 
-      {isAdmin && (
+      {canRelease && (
         <SecaoLiberacao
           project={project}
           etapaNum={5}

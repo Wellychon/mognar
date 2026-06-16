@@ -27,7 +27,7 @@ export function supabaseStorage(tenantId: string): StateStorage {
       void supabase
         .from('app_state')
         .upsert({ tenant_id: tenantId, state: JSON.parse(value), updated_at: new Date().toISOString() })
-        .then(({ error }) => {
+        .then(({ error }: any) => {
           if (error) console.warn('[supabase] persist falhou:', error.message);
         });
     },

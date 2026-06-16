@@ -27,6 +27,8 @@ function LayoutCard({
   onArquivoRemove: (id: string, idx: number) => void;
   onAprovar: (id: string) => void;
 }) {
+  const { currentUser } = useStore();
+  const isCliente = currentUser?.role === 'Cliente';
   const [showFeedback, setShowFeedback] = useState(false);
   const [comentario, setComentario] = useState(layout.comentario || '');
   const cfg = STATUS_LAYOUT[layout.status];
@@ -43,17 +45,19 @@ function LayoutCard({
       {layout.arquivos.length > 0 ? (
         <ul className="space-y-1">
           {layout.arquivos.map((a, idx) => (
-            <ArquivoItem key={idx} a={a} onRemove={() => onArquivoRemove(layout.id, idx)} />
+            <ArquivoItem key={idx} a={a} onRemove={isCliente ? undefined : () => onArquivoRemove(layout.id, idx)} />
           ))}
         </ul>
       ) : (
         <p className="text-xs text-gray-400 italic">Nenhum arquivo enviado.</p>
       )}
 
-      <UploadZone
-        onAdd={arquivos => onArquivosAdd(layout.id, arquivos)}
-        accept=".pdf,image/*,.dwg"
-      />
+      {!isCliente && (
+        <UploadZone
+          onAdd={arquivos => onArquivosAdd(layout.id, arquivos)}
+          accept=".pdf,image/*,.dwg"
+        />
+      )}
 
       {layout.comentario && (
         <div className="bg-red-50 border border-red-200 rounded-md px-3 py-2">
@@ -62,7 +66,7 @@ function LayoutCard({
         </div>
       )}
 
-      {layout.status !== 'aprovado' && (
+      {layout.status !== 'aprovado' && !isCliente && (
         <div className="flex gap-2 flex-wrap no-print">
           <button
             onClick={() => onAprovar(layout.id)}
@@ -114,6 +118,8 @@ function SecaoLayouts({
   maxRevisoes: number;
   onUpdate: (ep: EstudoPreliminar) => void;
 }) {
+  const { currentUser } = useStore();
+  const isCliente = currentUser?.role === 'Cliente';
   const ep = estudoPreliminar || { layouts: [], revisoesUsadas: 0 };
 
   const addLayout = () => {
@@ -174,7 +180,7 @@ function SecaoLayouts({
               <span className="text-xs text-red-600 bg-red-50 px-2 py-0.5 rounded-full">Limite de revisões atingido</span>
             )}
           </div>
-          {ep.layouts.length < maxRevisoes && !ep.layoutAprovadoId && (
+          {ep.layouts.length < maxRevisoes && !ep.layoutAprovadoId && !isCliente && (
             <button
               onClick={addLayout}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors no-print"
@@ -222,7 +228,7 @@ export function Etapa2EstudoPreliminar({ project, etapa, etapaData }: {
 }) {
   const navigate = useNavigate();
   const { updateEtapaData, liberarEtapa, registrarAceite, showToast, currentUser } = useStore();
-  const isAdmin = currentUser.role === 'Admin' || currentUser.role === 'FuerzaAdmin';
+  const canRelease = currentUser.role === 'Admin' || currentUser.role === 'FuerzaAdmin' || currentUser.role === 'Gestor';
   const maxRevisoes = project.maxRevisoesLayouts ?? 3;
   const ep: EstudoPreliminar = etapaData.estudoPreliminar || { layouts: [], revisoesUsadas: 0 };
 
@@ -268,7 +274,7 @@ export function Etapa2EstudoPreliminar({ project, etapa, etapaData }: {
         }}
       />
 
-      {isAdmin && (
+      {canRelease && (
         <SecaoLiberacao
           project={project}
           etapaNum={2}

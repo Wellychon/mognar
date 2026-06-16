@@ -74,7 +74,11 @@ export function Layout({ children }: LayoutProps) {
 
         <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
           <button
-            onClick={async () => { await logout(); navigate('/login', { replace: true }); }}
+            onClick={async () => {
+              await logout();
+              useStore.getState().logout();
+              navigate('/login', { replace: true });
+            }}
             style={{
               fontSize: 12,
               color: 'rgba(255,255,255,0.5)',
@@ -167,10 +171,16 @@ export function Layout({ children }: LayoutProps) {
                   </p>
                 </button>
               )}
-              {projects.length === 0 ? (
-                <p style={{ fontSize: 12, color: 'var(--ink-300)', padding: '12px 16px' }}>Nenhum projeto ainda.</p>
-              ) : (
-                projects.map(project => {
+              {(() => {
+                const visibleProjects = currentUser.role === 'Cliente'
+                  ? projects.filter(p => p.id === 'tari-restaurante-2026')
+                  : projects;
+
+                if (visibleProjects.length === 0) {
+                  return <p style={{ fontSize: 12, color: 'var(--ink-300)', padding: '12px 16px' }}>Nenhum projeto ainda.</p>;
+                }
+
+                return visibleProjects.map(project => {
                   const isActive = project.id === id;
                   const etapaAtual = project.etapas.find(e => e.numero === project.etapaAtual);
                   return (
@@ -201,31 +211,33 @@ export function Layout({ children }: LayoutProps) {
                       </p>
                     </button>
                   );
-                })
-              )}
+                });
+              })()}
             </div>
 
             <div style={{ borderTop: '1px solid var(--bone)' }}>
-              <button
-                onClick={() => navigate('/projetos/novo')}
-                style={{
-                  width: '100%',
-                  padding: '8px 12px',
-                  fontSize: 13,
-                  fontWeight: 500,
-                  color: 'var(--terracotta)',
-                  background: 'transparent',
-                  border: 'none',
-                  borderBottom: '1px solid var(--bone)',
-                  cursor: 'pointer',
-                  transition: 'background 150ms',
-                  textAlign: 'center',
-                }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'var(--terracotta-tint)')}
-                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-              >
-                + Novo Projeto
-              </button>
+              {currentUser.role !== 'Cliente' && (
+                <button
+                  onClick={() => navigate('/projetos/novo')}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    fontSize: 13,
+                    fontWeight: 500,
+                    color: 'var(--terracotta)',
+                    background: 'transparent',
+                    border: 'none',
+                    borderBottom: '1px solid var(--bone)',
+                    cursor: 'pointer',
+                    transition: 'background 150ms',
+                    textAlign: 'center',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--terracotta-tint)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                >
+                  + Novo Projeto
+                </button>
+              )}
 
               {/* Configurações */}
               <button

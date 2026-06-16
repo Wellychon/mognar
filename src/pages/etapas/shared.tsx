@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import type { ArquivoAnexo, EscopoContratado } from '../../types';
 import { Accordion } from '../../components/Accordion';
 import { Modal } from '../../components/Modal';
-import { USERS } from '../../store';
+import { USERS, useStore } from '../../store';
 import type { Project } from '../../types';
 
 export function StatusBadge({ status }: { status: string }) {
@@ -244,6 +244,8 @@ export function UploadZone({
 // ─── SecaoResumo ─────────────────────────────────────────────────────────────
 export function SecaoResumo({ project }: { project: Project }) {
   const [editOpen, setEditOpen] = useState(false);
+  const { currentUser } = useStore();
+  const isCliente = currentUser?.role === 'Cliente';
   const getUserName = (id: string) => USERS.find(u => u.id === id)?.name || id;
 
   return (
@@ -263,11 +265,13 @@ export function SecaoResumo({ project }: { project: Project }) {
           'Área': project.areaM2 ? `${project.areaM2} m²` : '—',
           'Arquiteta': getUserName(project.arquitetaId),
         }} />
-        <div className="mt-4">
-          <button onClick={() => setEditOpen(true)} className="text-sm text-blue-600 hover:underline">
-            Editar informações
-          </button>
-        </div>
+        {!isCliente && (
+          <div className="mt-4">
+            <button onClick={() => setEditOpen(true)} className="text-sm text-blue-600 hover:underline">
+              Editar informações
+            </button>
+          </div>
+        )}
       </Accordion>
 
       {editOpen && (
@@ -286,8 +290,10 @@ export function SecaoEscopo({ projectId: _p, etapaNum: _e, escopo, onSave, secti
   onSave: (e: EscopoContratado) => void;
   sectionTitle?: string;
 }) {
+  const { currentUser } = useStore();
+  const isCliente = currentUser?.role === 'Cliente';
   const hasData = !!(escopo?.descricao);
-  const [editing, setEditing] = useState(!hasData);
+  const [editing, setEditing] = useState(!hasData && !isCliente);
   const [form, setForm] = useState<EscopoContratado>(
     escopo || { descricao: '', valor: '', formaPagamento: '', observacoes: '' }
   );
@@ -310,15 +316,17 @@ export function SecaoEscopo({ projectId: _p, etapaNum: _e, escopo, onSave, secti
             'Forma de pagamento': escopo?.formaPagamento,
             'Observações': escopo?.observacoes || '—',
           }} />
-          <button
-            onClick={() => setEditing(true)}
-            className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-            </svg>
-            Editar escopo
-          </button>
+          {!isCliente && (
+            <button
+              onClick={() => setEditing(true)}
+              className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+              Editar escopo
+            </button>
+          )}
         </div>
       ) : (
         <div className="space-y-4">
@@ -375,8 +383,10 @@ export function SecaoReuniao({ projectId: _p, etapaNum: _e, reuniao, onSave, sec
   onSave: (r: any) => void;
   sectionTitle?: string;
 }) {
+  const { currentUser } = useStore();
+  const isCliente = currentUser?.role === 'Cliente';
   const hasData = !!(reuniao?.dataReuniao);
-  const [editing, setEditing] = useState(!hasData);
+  const [editing, setEditing] = useState(!hasData && !isCliente);
   const [form, setForm] = useState({
     dataReuniao: reuniao?.dataReuniao || '',
     transcricao: reuniao?.transcricao || '',
@@ -421,12 +431,14 @@ export function SecaoReuniao({ projectId: _p, etapaNum: _e, reuniao, onSave, sec
               </ul>
             </div>
           )}
-          <button onClick={() => setEditing(true)} className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline">
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-            </svg>
-            Editar registro
-          </button>
+          {!isCliente && (
+            <button onClick={() => setEditing(true)} className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+              Editar registro
+            </button>
+          )}
         </div>
       ) : (
         <div className="space-y-4">
@@ -484,8 +496,10 @@ export function SecaoLevantamento({ levantamento, onSave, sectionTitle = '4. Lev
   onSave: (l: any) => void;
   sectionTitle?: string;
 }) {
+  const { currentUser } = useStore();
+  const isCliente = currentUser?.role === 'Cliente';
   const hasData = !!(levantamento?.dataLevantamento);
-  const [editing, setEditing] = useState(!hasData);
+  const [editing, setEditing] = useState(!hasData && !isCliente);
   const [form, setForm] = useState({
     dataLevantamento: levantamento?.dataLevantamento || '',
     observacoes: levantamento?.observacoes || '',
@@ -523,12 +537,14 @@ export function SecaoLevantamento({ levantamento, onSave, sectionTitle = '4. Lev
               </ul>
             </div>
           )}
-          <button onClick={() => setEditing(true)} className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline">
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-            </svg>
-            Editar levantamento
-          </button>
+          {!isCliente && (
+            <button onClick={() => setEditing(true)} className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+              Editar levantamento
+            </button>
+          )}
         </div>
       ) : (
         <div className="space-y-4">
@@ -587,6 +603,8 @@ export function SecaoAceite({ project, etapaNum: _e, escopo, aceite, onAceite, s
   onAceite: (dataAceite: string) => void;
   sectionTitle?: string;
 }) {
+  const { currentUser } = useStore();
+  const isCliente = currentUser?.role === 'Cliente';
   const [modalOpen, setModalOpen] = useState(false);
   const [dataAceite, setDataAceite] = useState(new Date().toISOString().split('T')[0]);
   const hasEscopo = !!(escopo?.descricao);
@@ -612,17 +630,25 @@ export function SecaoAceite({ project, etapaNum: _e, escopo, aceite, onAceite, s
         ) : (
           <div className="space-y-3">
             <p className="text-sm text-gray-500">O aceite é operado pela equipe responsável pelo projeto.</p>
-            <button
-              onClick={() => hasEscopo && setModalOpen(true)}
-              disabled={!hasEscopo}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                hasEscopo ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-              }`}
-            >
-              Registrar aceite do cliente
-            </button>
-            {!hasEscopo && (
-              <p className="text-xs text-gray-400">Preencha o escopo contratado antes de registrar o aceite.</p>
+            {isCliente ? (
+              <p className="text-sm text-yellow-600 bg-yellow-50 border border-yellow-100 rounded-lg p-3">
+                Aguardando registro do aceite pela equipe Mognar.
+              </p>
+            ) : (
+              <>
+                <button
+                  onClick={() => hasEscopo && setModalOpen(true)}
+                  disabled={!hasEscopo}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    hasEscopo ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  }`}
+                >
+                  Registrar aceite do cliente
+                </button>
+                {!hasEscopo && (
+                  <p className="text-xs text-gray-400">Preencha o escopo contratado antes de registrar o aceite.</p>
+                )}
+              </>
             )}
           </div>
         )}

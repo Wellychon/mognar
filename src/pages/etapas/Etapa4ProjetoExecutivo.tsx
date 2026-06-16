@@ -11,6 +11,8 @@ function SecaoEntregaveis({ projetoExecutivo, onUpdate }: {
   projetoExecutivo: ProjetoExecutivo;
   onUpdate: (pe: ProjetoExecutivo) => void;
 }) {
+  const { currentUser } = useStore();
+  const isCliente = currentUser?.role === 'Cliente';
   const [addingCategoria, setAddingCategoria] = useState<CategoriaEntregavel | null>(null);
 
   const getEntregavel = (cat: CategoriaEntregavel) =>
@@ -48,7 +50,7 @@ function SecaoEntregaveis({ projetoExecutivo, onUpdate }: {
               {entregavel && entregavel.arquivos.length > 0 && (
                 <ul className="space-y-1">
                   {entregavel.arquivos.map((a, idx) => (
-                    <ArquivoItem key={idx} a={a} onRemove={() => removeArquivo(cat, idx)} />
+                    <ArquivoItem key={idx} a={a} onRemove={isCliente ? undefined : () => removeArquivo(cat, idx)} />
                   ))}
                 </ul>
               )}
@@ -61,12 +63,14 @@ function SecaoEntregaveis({ projetoExecutivo, onUpdate }: {
                   <button onClick={() => setAddingCategoria(null)} className="mt-2 text-xs text-gray-400 hover:text-gray-600">Cancelar</button>
                 </div>
               ) : (
-                <button
-                  onClick={() => setAddingCategoria(cat)}
-                  className="text-xs text-blue-600 hover:underline no-print"
-                >
-                  + Adicionar arquivo
-                </button>
+                !isCliente && (
+                  <button
+                    onClick={() => setAddingCategoria(cat)}
+                    className="text-xs text-blue-600 hover:underline no-print"
+                  >
+                    + Adicionar arquivo
+                  </button>
+                )
               )}
             </div>
           );
@@ -87,7 +91,7 @@ function SecaoAprovacaoTripartite({ projetoExecutivo, onUpdate, currentUser }: {
   const partes = [
     { key: 'mognar' as const, label: 'Mognar', roles: ['Admin', 'FuerzaAdmin'] },
     { key: 'arquiteto' as const, label: 'Arquiteto', roles: ['Arquiteta'] },
-    { key: 'cliente' as const, label: 'Cliente', roles: ['Admin', 'FuerzaAdmin'] },
+    { key: 'cliente' as const, label: 'Cliente', roles: ['Admin', 'FuerzaAdmin', 'Cliente'] },
   ];
 
   const aprovar = (key: 'mognar' | 'arquiteto' | 'cliente') => {
@@ -152,7 +156,7 @@ export function Etapa4ProjetoExecutivo({ project, etapa, etapaData }: {
 }) {
   const navigate = useNavigate();
   const { updateEtapaData, liberarEtapa, showToast, currentUser } = useStore();
-  const isAdmin = currentUser.role === 'Admin' || currentUser.role === 'FuerzaAdmin';
+  const canRelease = currentUser.role === 'Admin' || currentUser.role === 'FuerzaAdmin' || currentUser.role === 'Gestor';
 
   const pe: ProjetoExecutivo = etapaData.projetoExecutivo || { entregaveis: [], aprovacao: {} };
   const totalArquivos = pe.entregaveis.reduce((sum, e) => sum + e.arquivos.length, 0);
@@ -183,7 +187,7 @@ export function Etapa4ProjetoExecutivo({ project, etapa, etapaData }: {
         currentUser={currentUser}
       />
 
-      {isAdmin && (
+      {canRelease && (
         <SecaoLiberacao
           project={project}
           etapaNum={4}
